@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Foloma Trading System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #0a0e1a; color: #fff; padding: 12px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px 20px; background: #1a1f2f; border-radius: 12px; border: 1px solid #2a3342; }
+        .logo h1 { color: #00f0b5; font-size: 22px; }
+        .logo span { color: #62748c; font-size: 12px; margin-left: 8px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-name { color: #00f0b5; font-weight: 600; }
+        .btn-logout { background: #2a3342; border: none; color: #fff; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .btn-logout:hover { background: #ff4d4d; }
+        
+        .connection { display: flex; align-items: center; gap: 20px; }
+        .status { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4d4d; }
+        .dot.connected { background: #00f0b5; box-shadow: 0 0 8px #00f0b5; }
+        .balance { background: #0b0e14; padding: 6px 14px; border-radius: 40px; border: 1px solid #2a3342; font-size: 14px; }
+        .balance-value { color: #00f0b5; font-weight: 600; margin-left: 5px; }
+        
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1f2f; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid #2a3342; }
+        .modal h2 { color: #00f0b5; margin-bottom: 20px; text-align: center; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; background: #0b0e14; border: 1px solid #2a3342; border-radius: 8px; color: #fff; cursor: pointer; text-align: center; }
+        .tab-btn.active { background: #00f0b5; color: #0b0e14; border-color: #00f0b5; }
+        .form-group { margin-bottom: 15px; }
+        .form-group input { width: 100%; padding: 12px; background: #0b0e14; border: 1px solid #2a3342; border-radius: 8px; color: #fff; font-size: 14px; }
+        .btn-primary { width: 100%; padding: 12px; background: #00f0b5; border: none; border-radius: 8px; color: #0b0e14; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .error-message { color: #ff4d4d; text-align: center; margin-top: 10px; font-size: 12px; }
+        
+        .card { background: #1a1f2f; border-radius: 12px; padding: 16px; border: 1px solid #2a3342; margin-bottom: 15px; }
+        .card-title { color: #00f0b5; font-size: 14px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a3342; display: flex; justify-content: space-between; }
+        
+        .symbol-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .symbol-btn { background: #0b0e14; border: 1px solid #2a3342; color: #fff; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .symbol-btn.active { background: #00f0b5; color: #0b0e14; border-color: #00f0b5; }
+        
+        .account-selector { display: flex; gap: 10px; }
+        .account-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; background: #2a3342; color: #fff; }
+        .account-btn.demo { background: #00f0b5; color: #0b0e14; }
+        
+        .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 15px; margin-bottom: 15px; }
+        .price-area { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; background: #0b0e14; padding: 12px; border-radius: 10px; }
+        .price { font-size: 28px; font-weight: 700; color: #00f0b5; }
+        .signal-badge { padding: 6px 16px; border-radius: 40px; font-size: 14px; font-weight: 600; }
+        .signal-badge.buy { background: #00f0b5; color: #0b0e14; }
+        .signal-badge.sell { background: #ff4d4d; color: #fff; }
+        .signal-badge.neutral { background: #62748c; color: #fff; }
+        .signal-confidence { font-size: 20px; font-weight: 700; margin-left: 10px; }
+        
+        .indicators-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        .indicator-compact { background: #0b0e14; padding: 10px; border-radius: 8px; text-align: center; }
+        .indicator-compact .label { font-size: 10px; color: #62748c; margin-bottom: 4px; }
+        .indicator-compact .value { font-size: 16px; font-weight: 600; }
+        .indicator-compact .desc { font-size: 9px; color: #00f0b5; margin-top: 2px; }
+        
+        .ma-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3342; }
+        .ma-item { text-align: center; }
+        .ma-label { font-size: 9px; color: #62748c; }
+        .ma-value { font-size: 11px; font-weight: 600; }
+        
+        .trading-panel { background: #0b0e14; border-radius: 10px; padding: 15px; }
+        .amount-input { width: 100%; padding: 10px; background: #1a1f2f; border: 1px solid #2a3342; border-radius: 8px; color: #fff; font-size: 16px; text-align: center; margin-bottom: 12px; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .btn-buy, .btn-sell { padding: 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-buy { background: #00f0b5; color: #0b0e14; }
+        .btn-sell { background: #ff4d4d; color: #fff; }
+        
+        .martingale-row { display: flex; gap: 10px; margin: 12px 0; }
+        .btn-martingale { flex: 1; background: #ffaa00; color: #0b0e14; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-martingale-reset { flex: 1; background: #2a3342; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .martingale-status { background: #0b0e14; border-radius: 8px; padding: 10px; font-size: 12px; margin-top: 10px; }
+        
+        .digits-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .last-digit { font-size: 28px; font-weight: 700; color: #00f0b5; }
+        .digits-history { display: flex; gap: 4px; flex-wrap: wrap; margin: 10px 0; }
+        .digit-box { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 12px; font-weight: 600; background: #1a1f2f; }
+        .digit-box.odd { color: #00f0b5; border: 1px solid #00f0b5; }
+        .digit-box.even { color: #ff4d4d; border: 1px solid #ff4d4d; }
+        
+        .alert-box { background: linear-gradient(135deg, #ffaa00, #ff8800); border-radius: 8px; padding: 12px; margin: 10px 0; text-align: center; display: none; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.01); } 100% { transform: scale(1); } }
+        .alert-box.recommended { display: block; }
+        
+        .btn-control { background: #2a3342; border: none; color: #fff; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 8px; width: 100%; }
+        .stats-footer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 15px; }
+        .stat-item { background: #1a1f2f; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #2a3342; }
+        .stat-label { font-size: 11px; color: #62748c; margin-bottom: 4px; }
+        .stat-number { font-size: 18px; font-weight: 600; }
+        .stat-number.positive { color: #00f0b5; }
+        .stat-number.negative { color: #ff4d4d; }
+        
+        .affiliate-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .affiliate-item { text-align: center; background: #0b0e14; padding: 8px; border-radius: 6px; }
+        .affiliate-label { font-size: 10px; color: #62748c; }
+        .affiliate-value { font-size: 16px; font-weight: 600; }
+        .warning { background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffc107; padding: 6px; border-radius: 6px; font-size: 11px; margin-top: 8px; display: none; text-align: center; }
+        
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .stats-footer { grid-template-columns: repeat(2, 1fr); } .indicators-row { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>FOLOMA <span>TRADING SYSTEM</span></h1>
+            </div>
+            <div class="user-info" id="user-info" style="display: none;">
+                <span class="user-name" id="user-name"></span>
+                <button class="btn-logout" onclick="logout()">SAIR</button>
+            </div>
+        </div>
+
+        <!-- Conteúdo principal -->
+        <div id="app-content" style="display: none;">
+            <!-- Status de Conexão -->
+            <div class="card">
+                <div class="card-title">🔌 STATUS</div>
+                <div class="connection">
+                    <div class="status">
+                        <span class="dot" id="status-dot"></span>
+                        <span id="status-text">Desconectado</span>
+                    </div>
+                    <div class="balance">
+                        Saldo: <span class="balance-value" id="balance">0.00</span> <span id="currency">USD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seletor de Conta -->
+            <div class="card">
+                <div class="card-title">🏦 TIPO DE CONTA</div>
+                <div class="account-selector">
+                    <div id="btn-demo" class="account-btn demo" onclick="selectAccount('demo')">🎮 CONTA DEMO</div>
+                    <div id="btn-real" class="account-btn" onclick="selectAccount('real')">💰 CONTA REAL</div>
+                </div>
+                <div id="account-info" style="margin-top: 10px; font-size: 11px; color: #62748c; text-align: center;">
+                    Demo: saldo virtual | Sem risco
+                </div>
+            </div>
+
+            <!-- Token -->
+            <div class="card">
+                <div class="card-title">🔑 TOKEN DERIV</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="password" id="deriv-token" placeholder="Cole o seu token da Deriv" style="flex: 1; background: #0b0e14; border: 1px solid #2a3342; color: #fff; padding: 8px; border-radius: 6px; font-size: 12px;">
+                    <button class="btn-control" onclick="saveToken()" style="width: auto; padding: 8px 16px;">💾 SALVAR</button>
+                </div>
+                <button class="btn-control" onclick="connectDeriv()">🔌 CONECTAR</button>
+                <div id="token-status" style="margin-top: 8px; font-size: 11px; color: #ffaa00;"></div>
+            </div>
+
+            <!-- Link de Afiliado -->
+            <div class="card">
+                <div class="card-title">🔗 LINK DE INDICAÇÃO</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="referral-link" readonly value="Carregando..." style="flex: 1; background: #0b0e14; border: 1px solid #2a3342; color: #fff; padding: 8px; border-radius: 6px; font-size: 12px;">
+                    <button class="btn-control" onclick="copiarLink()" style="width: auto; padding: 8px 16px;">📋 COPIAR</button>
+                </div>
+                <div class="affiliate-stats">
+                    <div class="affiliate-item"><div class="affiliate-label">Indicações</div><div class="affiliate-value" id="ref-count">0</div></div>
+                    <div class="affiliate-item"><div class="affiliate-label">Comissão</div><div class="affiliate-value" id="ref-commission" style="color: #00f0b5;">$0</div></div>
+                    <div class="affiliate-item"><div class="affiliate-label">Pendente</div><div class="affiliate-value" id="ref-pending" style="color: #ffaa00;">$0</div></div>
+                </div>
+            </div>
+
+            <!-- Ativos -->
+            <div class="card">
+                <div class="card-title"><span>📊 ATIVOS</span><span id="current-symbol" style="color: #00f0b5;">R_100</span></div>
+                <div class="symbol-row" id="symbol-selector"></div>
+            </div>
+
+            <!-- Grid Principal -->
+            <div class="main-grid">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="price-area">
+                        <div class="price" id="price">0.00</div>
+                        <div><span id="signal-badge" class="signal-badge neutral">NEUTRAL</span><span id="signal-confidence" class="signal-confidence">0%</span></div>
+                    </div>
+                    <div class="indicators-row">
+                        <div class="indicator-compact"><div class="label">TENDÊNCIA</div><div class="value" id="trend-score">0</div><div class="desc" id="trend-desc">---</div></div>
+                        <div class="indicator-compact"><div class="label">RSI (14)</div><div class="value" id="rsi-score">0</div><div class="desc" id="rsi-desc">---</div></div>
+                        <div class="indicator-compact"><div class="label">MACD</div><div class="value" id="macd-score">0</div><div class="desc" id="macd-desc">---</div></div>
+                        <div class="indicator-compact"><div class="label">BOLLINGER</div><div class="value" id="bb-score">0</div><div class="desc" id="bb-desc">---</div></div>
+                    </div>
+                    <div class="ma-row">
+                        <div class="ma-item"><div class="ma-label">SMA 9</div><div class="ma-value" id="sma9">---</div></div>
+                        <div class="ma-item"><div class="ma-label">SMA 21</div><div class="ma-value" id="sma21">---</div></div>
+                        <div class="ma-item"><div class="ma-label">SMA 50</div><div class="ma-value" id="sma50">---</div></div>
+                        <div class="ma-item"><div class="ma-label">EMA 12</div><div class="ma-value" id="ema12">---</div></div>
+                        <div class="ma-item"><div class="ma-label">EMA 26</div><div class="ma-value" id="ema26">---</div></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-title">🎯 EXECUTAR TRADE</div>
+                    <div class="trading-panel">
+                        <input type="number" id="amount" class="amount-input" value="0.35" min="0.35" max="100" step="0.01">
+                        <div class="action-buttons">
+                            <button class="btn-buy" onclick="executeTrade('BUY')">📈 COMPRAR</button>
+                            <button class="btn-sell" onclick="executeTrade('SELL')">📉 VENDER</button>
+                        </div>
+                        <div class="martingale-row">
+                            <button class="btn-martingale" onclick="aplicarMartingale()">🎲 MARTINGALE (2x)</button>
+                            <button class="btn-martingale-reset" onclick="resetarMartingale()">🔄 RESETAR</button>
+                        </div>
+                        <div class="martingale-status">
+                            <div>Martingale: <span id="martingale-active" style="color: #ffaa00;">DESATIVADO</span></div>
+                            <div>Próximo valor: <span id="martingale-next" style="color: #00f0b5;">$0.35</span></div>
+                        </div>
+                        <div class="warning" id="banca-warning">⚠️ Valor mínimo: $0.35 | Máximo: $100</div>
+                        <button class="btn-control" onclick="togglePause()" id="pause-btn">⏸️ PAUSAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dígitos -->
+            <div class="card">
+                <div class="card-title">🎲 ANÁLISE DE DÍGITOS</div>
+                <div class="digits-header">
+                    <div><div style="font-size: 10px;">ÚLTIMO DÍGITO</div><span class="last-digit" id="last-digit">-</span></div>
+                    <div><div style="font-size: 10px;">SEQUÊNCIA</div><span id="streak-counter">0</span> <span id="streak-type">---</span></div>
+                    <div><div style="font-size: 10px;">PRÓXIMO</div><span id="countdown">5s</span></div>
+                </div>
+                <div class="digits-history" id="digits-history"></div>
+                <div id="alert-box" class="alert-box">
+                    <div id="alert-message"></div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 8px;">
+                        <button class="btn-buy" style="padding: 6px 12px; font-size: 12px;" onclick="executarAlerta('odd')">🎲 ÍMPAR</button>
+                        <button class="btn-sell" style="padding: 6px 12px; font-size: 12px;" onclick="executarAlerta('even')">🎲 PAR</button>
+                    </div>
+                    <div id="alert-confidence" style="font-size: 11px; margin-top: 5px;"></div>
+                </div>
+                <div class="action-buttons" style="margin-top: 10px;">
+                    <button class="btn-buy" onclick="executeDigitTrade('odd')">🎲 ÍMPAR</button>
+                    <button class="btn-sell" onclick="executeDigitTrade('even')">🎲 PAR</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-footer">
+                <div class="stat-item"><div class="stat-label">Trades</div><div class="stat-number" id="total-trades">0</div></div>
+                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-number" id="win-rate">0%</div></div>
+                <div class="stat-item"><div class="stat-label">P/L</div><div class="stat-number" id="profit-loss">$0</div></div>
+                <div class="stat-item"><div class="stat-label">Retorno</div><div class="stat-number" id="total-return">0%</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2>🐍 FOLOMA TRADING</h2>
+            <div class="tabs">
+                <button id="tab-login" class="tab-btn active" onclick="showTab('login')">🔐 ENTRAR</button>
+                <button id="tab-register" class="tab-btn" onclick="showTab('register')">📝 REGISTAR</button>
+            </div>
+            <div id="login-form">
+                <div class="form-group"><input type="email" id="login-email" placeholder="Email"></div>
+                <div class="form-group"><input type="password" id="login-password" placeholder="Senha"></div>
+                <button class="btn-primary" onclick="login()">ENTRAR</button>
+            </div>
+            <div id="register-form" style="display: none;">
+                <div class="form-group"><input type="text" id="reg-name" placeholder="Nome completo"></div>
+                <div class="form-group"><input type="email" id="reg-email" placeholder="Email"></div>
+                <div class="form-group"><input type="password" id="reg-password" placeholder="Senha (mínimo 6)"></div>
+                <div class="form-group"><input type="text" id="reg-referral" placeholder="Código de indicação"></div>
+                <button class="btn-primary" onclick="register()">CRIAR CONTA</button>
+            </div>
+            <div id="auth-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== VARIÁVEIS ======
